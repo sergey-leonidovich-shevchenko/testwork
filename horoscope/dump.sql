@@ -74,6 +74,7 @@ DROP PROCEDURE IF EXISTS `add_user`;
 ### YAGNI mode enabled =)
 
 # Only Capricorn
+#EXPLAIN
 SELECT `u`.`id`, `u`.`name`, `u`.`birthday`
 FROM `user` AS `u`
 WHERE (
@@ -91,3 +92,17 @@ WHERE (
         WHERE `h`.`name` = 'Capricorn'
     )
 );
+
+# Optimized query
+
+ALTER TABLE `user`
+    ADD COLUMN `birthmonthday` VARCHAR(5) AS (substring(`birthday`, 6, 5));
+ALTER TABLE `user`
+    ADD KEY (`birthmonthday`);
+#EXPLAIN
+SELECT `user`.`id`, `user`.`name`, `user`.`birthday`
+FROM `horoscope` `h`
+    INNER JOIN `user` ON `birthmonthday` BETWEEN `date_start` AND `date_end`
+        OR (`date_start` > `date_end` AND `birthmonthday` BETWEEN `date_start` AND '12-31')
+        OR (`date_start` > `date_end` AND `birthmonthday` BETWEEN '01-01' AND `date_end`)
+WHERE `h`.`name` = 'Capricorn';
