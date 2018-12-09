@@ -38,8 +38,5 @@ $userCount = $user->getCountUserWithHoroscopeCapricorn()['count'];
         <h2>All records: <?= $userCount; ?></h2>
         <?= UserTableWidget::widget($userList, $userCount, $page, COUNT_USER_IN_TABLE); ?>
     </div>
-    <script src="vendor/jquery/jquery-3.3.1.min.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.js"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
