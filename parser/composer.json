@@ -1,0 +1,15 @@
+{
+  "name": "lancer-serega/parser",
+  "description": "Parser",
+  "autoload": {
+    "psr-4": {
+      "Parser\\": "Parser"
+    }
+  },
+  "authors": [
+    {
+      "name": "Sergey Shevchenko",
+      "email": "sergey.leonidovich.shevchenko@gmail.com"
+    }
+  ]
+}

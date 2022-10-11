@@ -1,0 +1,23 @@
+# Set the following environment variables before running `docker-compose up -d` command
+#
+# PARSER_XDEBUG_REMOTE_HOST=host.docker.internal (only for mac os and windows)
+
+version: '3.6'
+
+services:
+    parser-php:
+        build:
+            args:
+                APPLICATION_PATH: /var/www/parser
+            context: ./
+            dockerfile: ./build/Dockerfile
+        container_name: parser-php
+        expose:
+            - 9000
+        environment:
+            - "XDEBUG_CONFIG=remote_host=${PARSER_XDEBUG_REMOTE_HOST} remote_enable=1"
+        restart: "no"
+        tty: true
+        volumes:
+            - ./:/var/www/parser/
+            - ./var/log/php-fpm/:/var/log/php-fpm/
