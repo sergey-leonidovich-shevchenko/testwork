@@ -2,18 +2,31 @@
 
 namespace App\Storage;
 
-use App\Model;
+use PDO;
+use App\Model\{NotFoundException, Project, Task};
+use RuntimeException;
 
 class DataStorage
 {
     /**
-     * @var \PDO 
+     * @var PDO
      */
-    public $pdo;
+    public PDO $pdo;
 
+    /**
+     * @throws RuntimeException
+     */
     public function __construct()
     {
-        $this->pdo = new \PDO('mysql:dbname=task_tracker;host=127.0.0.1', 'user');
+        $dbHost = getenv('DB_HOST') ?: '127.0.0.1';
+        $dbName = getenv('DB_NAME');
+        $dbUser = getenv('DB_USER');
+        $dbPassword = getenv('DB_PASSWORD');
+        if ($dbHost && $dbName && $dbUser) {
+            $this->pdo = new PDO(sprintf('mysql:dbname=%s;host=%s', $dbName, $dbHost), $dbUser, $dbPassword);
+        }
+
+        throw new RuntimeException('Db connect is not valid!');
     }
 
     /**
