@@ -11,5 +11,9 @@
       "name": "Sergey Shevchenko",
       "email": "sergey.leonidovich.shevchenko@gmail.com"
     }
-  ]
+  ],
+  "require": {
+    "ext-pdo": "*",
+    "ext-json": "*"
+  }
 }

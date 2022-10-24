@@ -1,20 +1,22 @@
 <?php
 
-namespace Api\Controller;
+namespace App\Controller;
 
 use App\Model;
 use App\Storage\DataStorage;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Request;
+use JsonException;
+use Symfony\Component\HttpFoundation\{
+  Request, Response, JsonResponse
+};
 use Symfony\Component\Routing\Annotation\Route;
+use Throwable;
 
 class ProjectController
 {
   /**
    * @var DataStorage
    */
-  private $storage;
+  private DataStorage $storage;
 
   public function __construct(DataStorage $storage)
   {
@@ -22,53 +24,58 @@ class ProjectController
   }
 
   /**
-   * @param Request $request
-   *
    * @Route("/project/{id}", name="project", method="GET")
+   * @param Request $request
+   * @return JsonResponse
    */
-  public function projectAction(Request $request)
+  public function projectAction(Request $request): JsonResponse
   {
     try {
-      $project = $this->storage->getProjectById($request->get('id'));
-
-      return new Response($project->toJson());
+      $project = $this->storage->getProjectById((int)$request->get('id'));
+      return new JsonResponse($project->toJson());
     } catch (Model\NotFoundException $e) {
-      return new Response('Not found', 404);
-    } catch (\Throwable $e) {
-      return new Response('Something went wrong', 500);
+      return new JsonResponse('Not found', Response::HTTP_NOT_FOUND);
+    } catch (Throwable $e) {
+      return new JsonResponse(
+        'Something went wrong',
+        Response::HTTP_INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   /**
-   * @param Request $request
-   *
    * @Route("/project/{id}/tasks", name="project-tasks", method="GET")
+   * @param Request $request
+   * @return JsonResponse
+   * @throws JsonException
    */
-  public function projectTaskPagerAction(Request $request)
+  public function projectTaskPagerAction(Request $request): JsonResponse
   {
     $tasks = $this->storage->getTasksByProjectId(
-      $request->get('id'),
-      $request->get('limit'),
-      $request->get('offset')
+      (int)$request->get('id'),
+      (int)$request->get('limit') ?: 10,
+      (int)$request->get('offset') ?: 0,
     );
 
-    return new Response(json_encode($tasks));
+    return new JsonResponse(json_encode($tasks, JSON_THROW_ON_ERROR));
   }
 
   /**
-   * @param Request $request
-   *
    * @Route("/project/{id}/tasks", name="project-create-task", method="PUT")
+   * @param Request $request
+   * @return JsonResponse
+   * @throws Model\NotFoundException
    */
-  public function projectCreateTaskAction(Request $request)
+  public function projectCreateTaskAction(Request $request): JsonResponse
   {
-    $project = $this->storage->getProjectById($request->get('id'));
+    $project = $this->storage->getProjectById((int)$request->get('id'));
     if (!$project) {
       return new JsonResponse(['error' => 'Not found']);
     }
 
     return new JsonResponse(
-      $this->storage->createTask($_REQUEST, $project->getId())
+      $this->storage->createTask($_REQUEST, $project->getId()),
+      Response::HTTP_CREATED,
     );
   }
 }
