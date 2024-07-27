@@ -3,6 +3,8 @@
 compose.override.yaml
 
 ###> symfony/framework-bundle ###
+/.env
+/.env.test
 /.env.local
 /.env.local.php
 /.env.*.local
@@ -11,3 +13,13 @@ compose.override.yaml
 /var/
 /vendor/
 ###< symfony/framework-bundle ###
+
+###> phpunit/phpunit ###
+/phpunit.xml
+.phpunit.result.cache
+###< phpunit/phpunit ###
+
+###> friendsofphp/php-cs-fixer ###
+/.php-cs-fixer.php
+/.php-cs-fixer.cache
+###< friendsofphp/php-cs-fixer ###
