@@ -51,7 +51,7 @@ class ProductControllerTest extends WebTestCase
         $coupon = $this->couponRepository->createDiscountAmountCoupon('D15', 15);
 
         $this->client->request('POST', '/calculate-price', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
-            'product' => PHP_INT_MAX,
+            'product' => 999,
             'taxNumber' => 'INVALID',
             'couponCode' => $coupon->getCode(),
         ], JSON_THROW_ON_ERROR));

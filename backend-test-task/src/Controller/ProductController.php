@@ -4,50 +4,50 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Service\PaymentProcessor;
-use App\Service\PriceCalculator;
+use App\Exception\InvalidTaxNumberException;
+use App\Exception\ProductNotFoundException;
+use App\Exception\ValidationFailedException;
+use App\UseCase\Action\Product\CalculatePriceUseCase;
+use App\UseCase\Action\Product\PurchaseUseCase;
 use Exception;
 use JsonException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class ProductController extends AbstractController
 {
     public function __construct(
-        private readonly PriceCalculator $priceCalculator,
-        private readonly PaymentProcessor $paymentProcessor
+        private readonly CalculatePriceUseCase $calculatePriceUseCase,
+        private readonly PurchaseUseCase $purchaseUseCase,
     ) {}
 
     /**
      * @throws JsonException
      */
-    #[Route('/calculate-price', name: 'calculate_price', methods: ['POST'])]
+    #[Route('/calculate-price', name: 'product.calculate_price', methods: ['POST'])]
     final public function calculatePrice(Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         try {
-            $price = $this->priceCalculator->calculatePrice($data['product'], $data['taxNumber'], $data['couponCode'] ?? null);
-            return new JsonResponse(['price' => $price], 200);
-        } catch (Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], 400);
+            $price = $this->calculatePriceUseCase->execute($request);
+            return new JsonResponse(['price' => $price], Response::HTTP_OK);
+        } catch (InvalidTaxNumberException|ProductNotFoundException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        } catch (ValidationFailedException $e) {
+            return $e->getResponse();
         }
     }
 
-    /**
-     * @throws JsonException
-     */
-    #[Route('/purchase', name: 'purchase', methods: ['POST'])]
+    #[Route('/purchase', name: 'product.purchase', methods: ['POST'])]
     final public function purchase(Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true, 512, JSON_THROW_ON_ERROR);
         try {
-            $price = $this->priceCalculator->calculatePrice($data['product'], $data['taxNumber'], $data['couponCode'] ?? null);
-            $this->paymentProcessor->processPayment($data['paymentProcessor'], $price);
-            return new JsonResponse(['status' => 'success'], 200);
+            $this->purchaseUseCase->execute($request);
+            return new JsonResponse(['status' => 'success'], Response::HTTP_OK);
         } catch (Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], 400);
+            return new JsonResponse(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
     }
 }
