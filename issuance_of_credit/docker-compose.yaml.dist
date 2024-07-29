@@ -1,0 +1,53 @@
+version: '3.8'
+
+x-networks: &networks
+  networks:
+    - ioc-network
+
+x-postgres: &postgres
+  <<: *networks
+  image: postgres:${POSTGRES_VERSION:-16}-alpine
+  environment:
+    POSTGRES_DB: ${POSTGRES_DB:-app}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    POSTGRES_USER: ${POSTGRES_USER:-app}
+
+services:
+  php:
+    <<: *networks
+    build:
+      context: .
+      dockerfile: build/Dockerfile
+    container_name: ioc_php
+    hostname: ioc_php
+    ports:
+      - '8000:80'
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - postgres
+
+  postgres:
+    <<: *postgres
+    container_name: ioc_postgres
+    hostname: ioc_postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data:rw
+    ports:
+      - '${POSTGRES_HOST_PORT:-54321}:5432'
+
+  postgres_test:
+    <<: *postgres
+    container_name: ioc_postgres_test
+    hostname: ioc_postgres_test
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data:rw
+    ports:
+      - '${POSTGRES_HOST_PORT:-54322}:5432'
+
+networks:
+  ioc-network: ~
+
+volumes:
+  postgres_data: ~
+  postgres_test_data: ~
