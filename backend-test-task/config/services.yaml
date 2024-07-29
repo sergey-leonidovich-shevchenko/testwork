@@ -23,8 +23,12 @@ services:
             - '../src/Kernel.php'
 
     App\Repository\:
-        resource: '../src/Repository/*'
+        resource: '../src/Repository/'
         exclude: '../src/Repository/BaseRepository.php'
+
+    App\Controller\:
+        resource: '../src/Controller/'
+        tags: ['controller.service_arguments']
 
     App\Repository\CouponRepository:
         arguments:
