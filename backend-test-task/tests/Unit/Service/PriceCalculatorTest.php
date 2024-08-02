@@ -12,6 +12,8 @@ use App\Repository\CouponRepository;
 use App\Repository\ProductRepository;
 use App\Repository\TaxCountryRepository;
 use App\Service\PriceCalculator;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 
@@ -37,156 +39,124 @@ class PriceCalculatorTest extends TestCase
         );
     }
 
-    /**
-     * @throws ProductNotFoundException|InvalidTaxNumberException
-     */
-    final public function testCalculatePriceWithAmountCouponForGermany(): void
+    final public static function calculatePriceDataProvider(): Generator
     {
-        $product = new Product();
-        $product->setPrice(100);
+        yield 'Amount coupon for Germany' => [
+            'price' => 100,
+            'discountAmount' => 15,
+            'discountPercentage' => null,
+            'taxCountry' => 19.0,
+            'productId' => 1,
+            'taxNumber' => 'DE123456789',
+            'couponCode' => 'D15',
+            'returnPrice' => 66,
+        ];
 
-        $coupon = new Coupon();
-        $coupon->setDiscountAmount(15);
+        yield 'Percentage coupon for Germany' => [
+            'price' => 100,
+            'discountAmount' => null,
+            'discountPercentage' => 15,
+            'taxCountry' => 19.0,
+            'productId' => 1,
+            'taxNumber' => 'DE123456789',
+            'couponCode' => 'DP15',
+            'returnPrice' => 68.85,
+        ];
 
-        $this->productRepository->method('find')->willReturn($product);
-        $this->couponRepository->method('findOneBy')->willReturn($coupon);
-        $this->taxCountryRepository->method('getTaxByCountry')->willReturn(19.0);
+        yield 'Amount coupon for Italy' => [
+            'price' => 100,
+            'discountAmount' => 15,
+            'discountPercentage' => null,
+            'taxCountry' => 22.0,
+            'productId' => 1,
+            'taxNumber' => 'IT12345678901',
+            'couponCode' => 'D15',
+            'returnPrice' => 63,
+        ];
 
-        $price = $this->priceCalculator->calculatePrice(1, 'DE123456789', 'D15');
-        $this->assertEquals(66, $price);
+        yield 'Percentage coupon for Italy' => [
+            'price' => 100,
+            'discountAmount' => null,
+            'discountPercentage' => 15,
+            'taxCountry' => 22.0,
+            'productId' => 1,
+            'taxNumber' => 'IT12345678901',
+            'couponCode' => 'DP15',
+            'returnPrice' => 66.3,
+        ];
+
+        yield 'Amount coupon for France' => [
+            'price' => 100,
+            'discountAmount' => 15,
+            'discountPercentage' => null,
+            'taxCountry' => 20.0,
+            'productId' => 1,
+            'taxNumber' => 'FRXX123456789',
+            'couponCode' => 'D15',
+            'returnPrice' => 65,
+        ];
+
+        yield 'Percentage coupon for France' => [
+            'price' => 100,
+            'discountAmount' => null,
+            'discountPercentage' => 15,
+            'taxCountry' => 20.0,
+            'productId' => 1,
+            'taxNumber' => 'FRXX123456789',
+            'couponCode' => 'DP15',
+            'returnPrice' => 68,
+        ];
+
+        yield 'Amount coupon for Greece' => [
+            'price' => 100,
+            'discountAmount' => 15,
+            'discountPercentage' => null,
+            'taxCountry' => 24.0,
+            'productId' => 1,
+            'taxNumber' => 'GR123456789',
+            'couponCode' => 'D15',
+            'returnPrice' => 61,
+        ];
+
+        yield 'Percentage coupon for Greece' => [
+            'price' => 100,
+            'discountAmount' => null,
+            'discountPercentage' => 15,
+            'taxCountry' => 24.0,
+            'productId' => 1,
+            'taxNumber' => 'GR123456789',
+            'couponCode' => 'DP15',
+            'returnPrice' => 64.6,
+        ];
     }
 
     /**
      * @throws ProductNotFoundException|InvalidTaxNumberException
      */
-    final public function testCalculatePriceWithPercentageCouponForGermany(): void
-    {
+    #[DataProvider('calculatePriceDataProvider')]
+    final public function testCalculatePrice(
+        float|int $price,
+        float|int|null $discountAmount,
+        float|int|null $discountPercentage,
+        float|int $taxCountry,
+        int $productId,
+        string $taxNumber,
+        string $couponCode,
+        float|int $returnPrice,
+    ): void {
         $product = new Product();
-        $product->setPrice(100);
+        $product->setPrice($price);
 
         $coupon = new Coupon();
-        $coupon->setDiscountPercentage(15);
+        $discountAmount && $coupon->setDiscountAmount($discountAmount);
+        $discountPercentage && $coupon->setDiscountPercentage($discountPercentage);
 
         $this->productRepository->method('find')->willReturn($product);
         $this->couponRepository->method('findOneBy')->willReturn($coupon);
-        $this->taxCountryRepository->method('getTaxByCountry')->willReturn(19.0);
+        $this->taxCountryRepository->method('getTaxByCountry')->willReturn($taxCountry);
 
-        $price = $this->priceCalculator->calculatePrice(1, 'DE123456789', 'DP15');
-        $this->assertEquals(68.85, $price);
-    }
-
-    /**
-     * @throws ProductNotFoundException|InvalidTaxNumberException
-     */
-    final public function testCalculatePriceWithAmountCouponForItaly(): void
-    {
-        $product = new Product();
-        $product->setPrice(100);
-
-        $coupon = new Coupon();
-        $coupon->setDiscountAmount(15);
-
-        $this->productRepository->method('find')->willReturn($product);
-        $this->couponRepository->method('findOneBy')->willReturn($coupon);
-        $this->taxCountryRepository->method('getTaxByCountry')->willReturn(22.0);
-
-        $price = $this->priceCalculator->calculatePrice(1, 'IT12345678901', 'D15');
-        $this->assertEquals(63, $price);
-    }
-
-    /**
-     * @throws ProductNotFoundException|InvalidTaxNumberException
-     */
-    final public function testCalculatePriceWithPercentageCouponForItaly(): void
-    {
-        $product = new Product();
-        $product->setPrice(100);
-
-        $coupon = new Coupon();
-        $coupon->setDiscountPercentage(15);
-
-        $this->productRepository->method('find')->willReturn($product);
-        $this->couponRepository->method('findOneBy')->willReturn($coupon);
-        $this->taxCountryRepository->method('getTaxByCountry')->willReturn(22.0);
-
-        $price = $this->priceCalculator->calculatePrice(1, 'IT12345678901', 'DP15');
-        $this->assertEquals(66.3, $price);
-    }
-
-    /**
-     * @throws ProductNotFoundException|InvalidTaxNumberException
-     */
-    final public function testCalculatePriceWithAmountCouponForFrance(): void
-    {
-        $product = new Product();
-        $product->setPrice(100);
-
-        $coupon = new Coupon();
-        $coupon->setDiscountAmount(15);
-
-        $this->productRepository->method('find')->willReturn($product);
-        $this->couponRepository->method('findOneBy')->willReturn($coupon);
-        $this->taxCountryRepository->method('getTaxByCountry')->willReturn(20.0);
-
-        $price = $this->priceCalculator->calculatePrice(1, 'FRXX123456789', 'D15');
-        $this->assertEquals(65, $price);
-    }
-
-    /**
-     * @throws ProductNotFoundException|InvalidTaxNumberException
-     */
-    final public function testCalculatePriceWithPercentageCouponForFrance(): void
-    {
-        $product = new Product();
-        $product->setPrice(100);
-
-        $coupon = new Coupon();
-        $coupon->setDiscountPercentage(15);
-
-        $this->productRepository->method('find')->willReturn($product);
-        $this->couponRepository->method('findOneBy')->willReturn($coupon);
-        $this->taxCountryRepository->method('getTaxByCountry')->willReturn(20.0);
-
-        $price = $this->priceCalculator->calculatePrice(1, 'FRXX123456789', 'DP15');
-        $this->assertEquals(68, $price);
-    }
-
-    /**
-     * @throws ProductNotFoundException|InvalidTaxNumberException
-     */
-    final public function testCalculatePriceWithAmountCouponForGreece(): void
-    {
-        $product = new Product();
-        $product->setPrice(100);
-
-        $coupon = new Coupon();
-        $coupon->setDiscountAmount(15);
-
-        $this->productRepository->method('find')->willReturn($product);
-        $this->couponRepository->method('findOneBy')->willReturn($coupon);
-        $this->taxCountryRepository->method('getTaxByCountry')->willReturn(24.0);
-
-        $price = $this->priceCalculator->calculatePrice(1, 'GR123456789', 'D15');
-        $this->assertEquals(61, $price);
-    }
-
-    /**
-     * @throws ProductNotFoundException|InvalidTaxNumberException
-     */
-    final public function testCalculatePriceWithPercentageCouponForGreece(): void
-    {
-        $product = new Product();
-        $product->setPrice(100);
-
-        $coupon = new Coupon();
-        $coupon->setDiscountPercentage(15);
-
-        $this->productRepository->method('find')->willReturn($product);
-        $this->couponRepository->method('findOneBy')->willReturn($coupon);
-        $this->taxCountryRepository->method('getTaxByCountry')->willReturn(24.0);
-
-        $price = $this->priceCalculator->calculatePrice(1, 'GR123456789', 'DP15');
-        $this->assertEquals(64.6, $price);
+        $price = $this->priceCalculator->calculatePrice($productId, $taxNumber, $couponCode);
+        $this->assertEquals($returnPrice, $price);
     }
 
     /**

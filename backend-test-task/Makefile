@@ -10,7 +10,7 @@ PHONY: help
 help: ## ❔  This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-setup: down build init install up migrate fixtures tests success-message console ## ⚙️ Setup application.
+setup: down build init install up migrate fixtures run-tests success-message console ## ⚙️ Setup application.
 
 init:  ## 🔢 Initialize environment and other .dist files.
 	@if [ ! -f .env ]; then (echo "Создаем файл .env из .env.dist" && cp .env.dist .env); else (echo "Файл .env уже создан"); fi
@@ -50,7 +50,7 @@ fixtures: ## 📄 Create fixtures.
 	@echo "📄 Create fixtures..."
 	${DC_RUN} bin/console doctrine:fixtures:load -n
 
-tests: ## 📟 Run tests.
+run-tests: ## 📟 Run tests.
 	@echo "📟 Run tests..."
 	${DC_RUN} php vendor/bin/phpunit
 
