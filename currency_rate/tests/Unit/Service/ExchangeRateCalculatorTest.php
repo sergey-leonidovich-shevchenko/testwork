@@ -13,10 +13,12 @@ use PHPUnit\Framework\TestCase;
 
 class ExchangeRateCalculatorTest extends TestCase
 {
-    final public function testCalculate(): void
+    final protected function setUp(): void
     {
+        parent::setUp();
+
         $currencyRateRepository = $this->createMock(CurrencyRateRepository::class);
-        $currencyRateRepository->method('findOneBy')
+        $currencyRateRepository->method('findOneByCurrencyCode')
             ->willReturnCallback(function ($criteria) {
                 $rates = [
                     CurrencyEnum::USD->value => new CurrencyRate(CurrencyEnum::USD->value, 1.2, new \DateTime()),
@@ -26,20 +28,36 @@ class ExchangeRateCalculatorTest extends TestCase
 
                 return $rates[$criteria['currencyCode']] ?? null;
             });
+        $this->calculator = new ExchangeRateCalculator($currencyRateRepository);
+    }
 
-        $calculator = new ExchangeRateCalculator($currencyRateRepository);
+    final public static function calculatePriceDataProvider(): \Generator
+    {
+        yield '100 USD must be convert to 66.67 GBP' => [
+            'fromCurrency' => CurrencyEnum::USD->value,
+            'toCurrency' => CurrencyEnum::GBP->value,
+            'amount' => 100,
+            'result' => 66.67,
+        ];
 
-        // TODO: Use DataProvider
-        $request = new ExchangeRequestDTO(CurrencyEnum::USD->value, CurrencyEnum::GBP->value, 100);
-        $result = $calculator->calculate($request);
-        $this->assertEquals(66.67, round($result, 2)); // 100 USD должны конвертироваться в 66.67 GBP
+        yield '100 GBP must be convert to 150 USD' => [
+            'fromCurrency' => CurrencyEnum::GBP->value,
+            'toCurrency' => CurrencyEnum::USD->value,
+            'amount' => 100,
+            'result' => 150.0,
+        ];
 
-        $request = new ExchangeRequestDTO(CurrencyEnum::GBP->value, CurrencyEnum::USD->value, 100);
-        $result = $calculator->calculate($request);
-        $this->assertEquals(150, round($result, 2)); // 100 GBP должны конвертироваться в 150 USD
+        yield '100 EUR must be convert to 120 USD' => [
+            'fromCurrency' => CurrencyEnum::EUR->value,
+            'toCurrency' => CurrencyEnum::USD->value,
+            'amount' => 100,
+            'result' => 120.0,
+        ];
+    }
 
-        $request = new ExchangeRequestDTO(CurrencyEnum::EUR->value, CurrencyEnum::USD->value, 100);
-        $result = $calculator->calculate($request);
-        $this->assertEquals(120, round($result, 2)); // 100 EUR должны конвертироваться в 120 USD
+    final public function testCalculate(string $fromCurrency, string $toCurrency, int $amount, float $result): void
+    {
+        $request = new ExchangeRequestDTO($fromCurrency, $toCurrency, $amount);
+        $this->assertEquals($result, \round($this->calculator->calculate($request), 2));
     }
 }

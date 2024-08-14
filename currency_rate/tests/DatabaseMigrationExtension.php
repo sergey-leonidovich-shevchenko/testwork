@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use AllowDynamicProperties;
-use Exception;
 use PHPUnit\Runner\Extension\Extension as ExtensionInterface;
 use PHPUnit\Runner\Extension\Facade;
 use PHPUnit\Runner\Extension\ParameterCollection;
@@ -14,7 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 
-#[AllowDynamicProperties]
+#[\AllowDynamicProperties]
 class DatabaseMigrationExtension implements ExtensionInterface
 {
     public function __construct()
@@ -24,7 +22,7 @@ class DatabaseMigrationExtension implements ExtensionInterface
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     final public function bootstrap(Configuration $configuration, Facade $facade, ParameterCollection $parameters): void
     {
@@ -33,7 +31,7 @@ class DatabaseMigrationExtension implements ExtensionInterface
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     private function runMigrations(): void
     {

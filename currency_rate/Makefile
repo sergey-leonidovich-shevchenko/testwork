@@ -10,14 +10,16 @@ PHONY: help
 help: ## ❔  This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-setup: down init build install up migrate run-tests success-message console ## ⚙️ Setup application.
+setup: down init build install up migrate success-message console ## ⚙️ Setup application.
 
 init:  ## 🔢 Initialize environment and other .dist files.
-	@if [ ! -f .env ]; then (echo "Создаем файл .env из .env.dist" && cp .env.dist .env); else (echo "Файл .env уже создан"); fi
-	@if [ ! -f .env.test ]; then (echo "Создаем файл .env.test из .env.test.dist" && cp .env.test.dist .env.test); else (echo "Файл .env.test уже создан"); fi
-	@if [ ! -f docker-compose.yml ]; then (echo "Создаем файл docker-compose.yml из docker-compose.yml.dist" && cp docker-compose.yml.dist docker-compose.yml); else (echo "Файл docker-compose.yml уже создан"); fi
-	@if [ ! -f .phpunit.xml ]; then (echo "Создаем файл .phpunit.xml из .phpunit.xml.dist" && cp .phpunit.xml.dist .phpunit.xml); else (echo "Файл .phpunit.xml уже создан"); fi
-	@if [ ! -f .php-cs-fixer.php ]; then (echo "Создаем файл .php-cs-fixer.php из .php-cs-fixer.php.dist" && cp .php-cs-fixer.php.dist .php-cs-fixer.php); else (echo "Файл .php-cs-fixer.php уже создан"); fi
+	@for file in .env .env.test docker-compose.yml .phpunit.xml .php-cs-fixer.php .phpstan.neon; do \
+		if [ ! -f $$file ]; then \
+			echo "Создаем файл $$file из $$file.dist" && cp $$file.dist $$file; \
+		else \
+			echo "Файл $$file уже создан"; \
+		fi; \
+	done
 
 build: ## 🔧 Build services.
 	${DC} build $(c)
@@ -51,9 +53,12 @@ run-tests: ## 📟 Run tests.
 	@echo "📟 Run tests..."
 	${DC_RUN} php vendor/bin/phpunit -c .phpunit.xml
 
+phpstan: ## 📊 Run phpstan analysis
+	${DC_RUN} php vendor/bin/phpstan analyse -c .phpstan.neon
+
 success-message:
 	@echo "🚀 Project installed successfully!"
 	@echo "You can now access the application at http://localhost:8337"
 
 cs-fix:
-	${DC_RUN}
+	${DC_RUN} vendor/bin/php-cs-fixer fix

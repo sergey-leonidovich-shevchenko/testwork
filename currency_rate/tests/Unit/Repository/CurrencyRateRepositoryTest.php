@@ -12,7 +12,7 @@ class CurrencyRateRepositoryTest extends KernelTestCase
 {
     private readonly CurrencyRateRepository $currencyRateRepository;
 
-    final public function setUp(): void
+    final protected function setUp(): void
     {
         parent::setUp();
         $this->currencyRateRepository = static::getContainer()->get(CurrencyRateRepository::class);

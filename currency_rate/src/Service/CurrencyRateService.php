@@ -19,13 +19,11 @@ readonly class CurrencyRateService
 
     final public function updateRates(): void
     {
-        $rates = $this->dataProvider->fetchRates();
         $date = new \DateTime();
-
+        $rates = $this->dataProvider->fetchRates();
         foreach ($rates as $currencyCode => $rate) {
             // TODO: move from foreach
             $currencyRate = $this->currencyRateRepository->findOneByCurrencyCode($currencyCode);
-
             if (!$currencyRate) {
                 $currencyRate = new CurrencyRate($currencyCode, $rate, $date);
                 $this->entityManager->persist($currencyRate);

@@ -12,7 +12,7 @@ class CurrencyRate
 {
     public function __construct(
         #[ORM\Id]
-        #[ORM\GeneratedValue(strategy: "SEQUENCE")]
+        #[ORM\GeneratedValue(strategy: 'SEQUENCE')]
         #[ORM\Column(type: 'string', length: 3)]
         private string $currencyCode,
 
@@ -29,9 +29,10 @@ class CurrencyRate
         return $this->currencyCode;
     }
 
-    final public function setCurrencyCode(string $currencyCode): CurrencyRate
+    final public function setCurrencyCode(string $currencyCode): self
     {
         $this->currencyCode = $currencyCode;
+
         return $this;
     }
 
@@ -40,9 +41,10 @@ class CurrencyRate
         return $this->rate;
     }
 
-    final public function setRate(float $rate): CurrencyRate
+    final public function setRate(float $rate): self
     {
         $this->rate = $rate;
+
         return $this;
     }
 
@@ -51,9 +53,10 @@ class CurrencyRate
         return $this->date;
     }
 
-    final public function setDate(\DateTime $date): CurrencyRate
+    final public function setDate(\DateTime $date): self
     {
         $this->date = $date;
+
         return $this;
     }
 }

@@ -15,7 +15,7 @@ class CurrencyRateRepository extends ServiceEntityRepository
         parent::__construct($registry, CurrencyRate::class);
     }
 
-    final public function findOneByCurrencyCode(string $currencyCode): ?CurrencyRate
+    public function findOneByCurrencyCode(string $currencyCode): ?CurrencyRate
     {
         return $this->findOneBy(['currencyCode' => $currencyCode]);
     }

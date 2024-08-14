@@ -6,21 +6,22 @@ namespace App\Service;
 
 use App\Dto\ExchangeRequestDTO;
 use App\Enum\CurrencyEnum;
+use App\Exception\CurrencyIsNotAvailableException;
 use App\Repository\CurrencyRateRepository;
 
 readonly class ExchangeRateCalculator
 {
-    public function __construct(private CurrencyRateRepository $currencyRateRepository)
-    {
+    public function __construct(
+        private CurrencyRateRepository $currencyRateRepository,
+    ) {
     }
 
     final public function calculate(ExchangeRequestDTO $request): float
     {
         $fromRate = $this->currencyRateRepository->findOneByCurrencyCode($request->getFromCurrency());
         $toRate = $this->currencyRateRepository->findOneByCurrencyCode($request->getToCurrency());
-
         if (!$fromRate || !$toRate) {
-            throw new \InvalidArgumentException("One of the currencies is not available.");
+            throw new CurrencyIsNotAvailableException();
         }
 
         // Если fromCurrency - базовая валюта, просто делим
